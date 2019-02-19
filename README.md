@@ -1,3 +1,7 @@
+# This branch is a backup for internal use.
+# New master branch will delete non-essential files.
+#
+#
 # mirLibSpark
 A microRNA prediction and validation software using Spark framework
 
