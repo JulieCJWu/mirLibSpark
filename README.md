@@ -10,7 +10,7 @@ Distributed with mirLibSpark: `miRanda, VARNA`, miRdup`, miRCheck`
 
 Environments: `Docker image` in a personal computer; or `Compute Canada`; or `Linux` in a personal computer (In linux option, user has to install dependencies).
 
-Two manuals are provided, one for docker mode, one for Compute Canada mode.
+Two manuals are provided as follows, one for docker mode, one for Compute Canada mode.
 
 
 # Manual for Docker
