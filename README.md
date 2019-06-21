@@ -1,5 +1,5 @@
 # mirLibSpark
-A microRNA prediction and validation software using Spark framework
+A microRNA prediction and validation software using Spark framework.
 
 ### Dependencies:
 Languages: `python2 (scipy, statsmodels), perl, java`
@@ -10,14 +10,24 @@ Distributed with mirLibSpark: `miRanda, VARNA`, miRdup`, miRCheck`
 
 Environments: `Docker image` in a personal computer; or `Compute Canada`; or `Linux` in a personal computer (In linux option, user has to install dependencies).
 
+Two manuals are provided, one for docker mode, one for Compute Canada mode.
 
 
+# Manual for Docker
 
-# Manual for docker and Compute Canada
-### Section 1: Docker environment
-
-Users need to have installed `Docker Desktop` in your computer.
+Users need to have installed `Docker Desktop` in your computer or any suitable environment.
 Please refer to https://www.docker.com/products/docker-desktop.
+
+Then follow this manual to pull `mirLibSpark` docker image and perform runs.
+
+Further editing of the options is NOT required but permitted. 
+For example, pipeline parameters are already optimized for plants but users can modify them if the experts' criteria evolve in the future.
+
+All dependencies will be installed automatically upon installation of mirLibSpark project.
+
+Supporting files for Arabidopsis are included with installation.
+Other supported species can be installed using one of our provided command lines (see this manual).
+
 
 ### `Pull` and `run` `mirLibSpark` image.
 ```
@@ -106,6 +116,7 @@ spark-submit mirLibPipeline.py --perform_differential_analysis --diffguide_file 
 
 ### Build supported species dbs
 Execute one of the following commands from `src` folder.
+Please select the command line corresponding to your preferred species.
 ```
 python init_dbs_ensembl40_v2.py wheat 2 curl-build
 python init_dbs_ensembl40_v2.py corn 2 curl-build
@@ -115,6 +126,8 @@ python init_dbs_ensembl40_v2.py brome 1 curl-build
 ```
 
 ### Build custom species dbs
+We have supported the indexing for 7 plant species.
+If your preferred species has not yet been supported, we provide the command line to index your custom species.
 
 Step 1: put your custom genome fasta file in `input` folder.
 The genome file may contain one to several sequences in fasta format.
@@ -125,7 +138,33 @@ python init_dbs_customGenome.py ../input/speciesname.fasta
 ```
 Resulting dbs files need to be copied outside of image for future reuse.
 
-### Section 2: Compute Canada (tested in Graham)
+# Manual for Compute Canada (tested in Graham)
+Follow this manual to download `mirLibSpark project` from GitHub and perform runs.
+
+Users can choose to use Compute Canada servers or other servers.
+Users only need to edit the submission file to run `mirLibSpark` in the servers.
+
+The submission files are sometimes server-specific, and we provide a template for Compute Canada.
+Users in Compute Canada only need to edit their user credentials in the submission file.
+
+Further editing of the options is NOT required but permitted.
+For example, pipeline parameters are already optimized for plants but users can modify them if the experts' criteria evolve in the future.
+
+All dependencies will be loaded automatically upon execution.
+Docker is not used in this mode.
+
+
+Supporting files for Arabidopsis are included with installation.
+Other supported species can be installed using one of our provided command lines (see this manual).
+
+
+
+
+
+
+
+
+
 ### Pipeline usage
 Step 1: install the `mirLibSpark project` in your Compute Canada account.
 ```
@@ -171,8 +210,9 @@ sbatch mirlibspark_submission.sh
 ```
 
 ### Build supported species dbs
-Because in submission runs, there is no internet access. The build is done in two steps, first download the files from internet, then use submission file to build the index.
+Because in submission runs, there is no internet access. The build is done in two steps, first download the files from internet, then use submission file to build the dbs index.
 Step1: execute one of the following commands from `src` folder.
+Please select the command line corresponding to your preferred species.
 ```
 python init_dbs_ensembl40_v2.py wheat 2 curl
 python init_dbs_ensembl40_v2.py corn 2 curl
@@ -190,6 +230,8 @@ Submit the submission file in the job queue.
 ```
 sbatch submit_init_dbs_ensembl40.sh
 ```
+
+Users can build custom species dbs index. Please refer to section `Build custom species dbs`.
 
 
 
