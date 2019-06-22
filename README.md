@@ -224,7 +224,7 @@ sbatch mirlibspark_submission.sh
 This section presents how to build dbs in a remote server.
 Alternatively, users can prepare the dbs files using Docker mode in your local computer, and then copy the resulting files to your remote server.
 
-Because in submission runs, there might not be an internet access. The build is done in two steps, first download the files from internet, then use submission file to build the dbs index.
+Because in submission runs, there might not be internet access. The build is done in two steps, first download the files from internet, then use submission file to build the dbs index.
 
 Step1: execute one of the following commands from `src` folder.
 Please select the ONE of the following command lines that corresponds to your preferred species.
