@@ -184,7 +184,7 @@ https://github.com/JulieCJWu/mirLibSpark/releases
 
 ### Pipeline usage
 
-Step 1: put some RNA-seq libraries in `input` folder. Use a small demo file for a quick test; or use an Arabidopsis library GSM1087974 (100.txt) as an example.
+Step 1: put some RNA-seq libraries in `input` folder. Use a small demo file for a quick test; or use an *Arabidopsis* library GSM1087974 (100.txt) as an example.
 ```
 cd mirLibSpark
 mkdir input
