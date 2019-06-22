@@ -18,7 +18,7 @@ __Distributed with mirLibSpark__: `miRanda`, `VARNA`, `miRdup`, `miRCheck`
 __Environments__: Users run `mirLibSpark` in one of the following environments:
 `Docker` in a personal computer; or `Servers`; or `Linux` in a personal computer (In linux option, user has to install dependencies). 
 
-Docker mode requres some beginner to intermediate bioinformatics skills, and is recommended for biologists and reviewers.
+Docker mode requres some beginner to intermediate bioinformatics skills, and is recommended for biologists.
 Advanced users with high-throughput computation skills are encouraged to use server mode for an enhanced computational power.
 
 Two manuals are provided as follows, one for *docker mode*, one for *server mode*.
