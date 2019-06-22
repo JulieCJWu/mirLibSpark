@@ -53,7 +53,7 @@ Users can analyze the miRNAs using:
 (A1) `prediction` pipeline, or 
 (A2) `prediction + differential analysis` pipeline, or 
 (A3) `prediction + differential analysis + enrichment analysis` pipeline.
-The entire analysis procedure is `A3`, KEGG pathway enrichment analysis pipeline, while A1 and A2 perform part of the analysis procedure.
+The entire analysis procedure is `A3`, KEGG pathway enrichment analysis pipeline, while A1 and A2 perform part of the analysis procedure and are shown for pedagogic purpose in this manual.
 
 
 ### A1. prediction pipeline
