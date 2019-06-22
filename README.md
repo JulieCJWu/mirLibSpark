@@ -4,7 +4,7 @@ A plant microRNA prediction and validation software using Spark framework.
 Its prediction procedures and parameters are optimized for plants and comply with the gold-standard requirement on miRNA predictions.
 
 It is a standalone and fully automated package with zero-dependency.
-__Fully automated__: one command line to analyze your data, and annotate miRNAs and their functions in one run..
+__Fully automated__: one command line to analyze your data, and annotate miRNAs and their functions in one run.
 __Zero-dependency__: dependencies are automatically installed.
 
 
@@ -47,9 +47,17 @@ mkdir input output
 docker pull juliewu/mirlibsparkdocker:latest 
 docker run -v abs_path/to/output:/mirLibSpark/output -v abs_path/to/input:/mirLibSpark/input -it juliewu/mirlibsparkdocker:latest
 ```
-Once you are inside the docker image, you are in the `src` folder of the `mirLibSpark project`
+Once you are inside the docker image, you are in the `src` folder of the `mirLibSpark project`.
 
-### Pipeline usage: one to several *Arabidopsis* library.
+Users can analyze the miRNAs using:
+(A1) `prediction` pipeline, or 
+(A2) `prediction + differential analysis` pipeline, or 
+(A3) `prediction + differential analysis + enrichment analysis` pipeline.
+The entire analysis procedure is `A3`, KEGG pathway enrichment analysis pipeline, while A1 and A2 perform part of the analysis procedure.
+
+
+### A1. prediction pipeline
+Using one to several *Arabidopsis* library.
 Step 1: put some RNA-seq libraries in input folder. Use a small demo file for a quick test; or use an *Arabidopsis* library `GSM1087974` (100.txt) as an example. Make sure input is empty before copying.
 ```
 rm -fr ../input/*
@@ -78,7 +86,7 @@ When the run is done, find the reports in `output` folder.
 The name of the report folder looks like this: `local-0000000000000`.
 The description of the report files is listed in the end of this manual.
 
-### Differential analysis pipeline.
+### A2. Differential analysis pipeline.
 This analysis requires users to define the `Experiment-Control` pairs.
 
 Step 1: put two or more files in `input` folder.
@@ -118,7 +126,7 @@ Step 3: execute mirLibSpark program from `src` folder.
 spark-submit mirLibPipeline.py --perform_differential_analysis --diffguide_file diffguide_ath.txt --sc_heartbeap 300
 ```
 
-### KEGG pathway enrichment analysis pipeline.
+### A3. KEGG pathway enrichment analysis pipeline.
 Execute mirLibSpark program from `src` folder
 ```
 spark-submit mirLibPipeline.py --perform_differential_analysis --diffguide_file diffguide_ath.txt --perform_KEGGpathways_enrichment_analysis --sc_heartbeap 300
@@ -214,6 +222,13 @@ Use the following command directly or modify it as needed.
 
 Use `--dummy` to test your settings.
 > spark-submit --master ${MASTER_URL} --executor-memory ${SLURM_MEM_PER_NODE}M ../src/mirLibPipeline.py --dummy
+
+Note that users can analyze the miRNAs using:
+(1) `prediction` pipeline, or 
+(2) `prediction + differential analysis` pipeline, or 
+(3) `prediction + differential analysis + enrichment analysis` pipeline.
+The entire analysis procedure is `(3)`, KEGG pathway enrichment analysis pipeline, while (1) and (2) perform part of the analysis procedure.
+For details of how to set up the command lines, please see in this manual section A1, A2, and A3, respectievly.
 
 Step 3: submit the submission file in the job queue
 ```
