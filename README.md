@@ -133,7 +133,7 @@ spark-submit mirLibPipeline.py --perform_differential_analysis --diffguide_file 
 ```
 Because this analysis depends on the activation of differential analysis, users may notice that in the command line above, both *perform_differential_analysis* and *perform_KEGGpathways_enrichment_analysis* are flagged.
 
-### Build supported species dbs
+### A4. Build supported species dbs
 Execute one of the following commands from `src` folder.
 Please select ONE of the command lines that corresponds to your preferred species.
 ```
@@ -144,7 +144,7 @@ python init_dbs_ensembl40_v2.py potato 1 curl-build
 python init_dbs_ensembl40_v2.py brome 1 curl-build
 ```
 
-### Build custom species dbs
+### A5. Build custom species dbs
 We have supported the indexing for several popular plant species (ath, wheat, corn, rice, potato, brome).
 If your preferred species has not yet been supported, we provide the command line to index your custom species.
 
@@ -175,12 +175,12 @@ All dependencies will be loaded automatically upon task execution.
 Docker is not used in this mode.
 
 Supporting files for *Arabidopsis* are included with installation.
-Files for other supported or custom species can be installed and indexed using a simple command line in `mirLibSpark` (see this manual).
+Files for other supported or custom species can be installed and indexed using a simple command line in `mirLibSpark`.
 
 
 
 
-If users are not familiar with the submission procedures in remote servers, users can choose to use Docker in your computer (See the section *Manual for Docker*).
+If users are not familiar with the submission procedures in remote servers, users can choose to use Docker in your computer (See section *A. Manual for Docker*).
 
 ## `git clone` mirLibSpark project.
 Install the `mirLibSpark project` in your Compute Canada account.
@@ -190,7 +190,7 @@ git clone git@github.com:JulieCJWu/mirLibSpark.git
 or download the latest release of source codes
 https://github.com/JulieCJWu/mirLibSpark/releases
 
-### Pipeline usage
+### B1. Pipeline usage
 
 Step 1: put some RNA-seq libraries in `input` folder. Use a small demo file for a quick test; or use an *Arabidopsis* library GSM1087974 (100.txt) as an example.
 ```
@@ -235,7 +235,7 @@ Step 3: submit the submission file in the job queue
 sbatch mirlibspark_submission.sh
 ```
 
-### Build supported species dbs
+### B2. Build supported species dbs
 This section presents how to build dbs in a remote server.
 Alternatively, users can prepare the dbs files using Docker mode in your local computer, and then copy the resulting files to your remote server.
 
@@ -261,7 +261,7 @@ Submit the submission file in the job queue.
 sbatch submit_init_dbs_ensembl40.sh
 ```
 
-Users can build custom species dbs index as described in a previous section, `Build custom species dbs`.
+Users can build custom species dbs index as described in a previous section, *A5. Build custom species dbs*.
 
 
 
