@@ -158,7 +158,7 @@ In order to run `mirLibSpark` in a server, users only need to edit the submissio
 The submission files are server-specific, and therefore we provide a template for Graham server in Compute Canada.
 Compute Canada users only need to edit their user credentials in the submission file template.
 
-For other servers, please refer to your service provider for the instruction of the task submission procedures.
+For other servers, such as Microsoft Azure, please refer to the service provider for the instruction of the task submission procedures.
 
 Further editing of the options is NOT required but permitted.
 For example, pipeline parameters are already optimized for plants but users can modify them if the experts' criteria evolve in the future.
