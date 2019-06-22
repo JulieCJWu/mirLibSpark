@@ -24,7 +24,7 @@ Advanced users with high-throughput computation skills are encouraged to use ser
 Two manuals are provided as follows, one for *docker mode*, one for *server mode*.
 
 
-# Manual for Docker
+# A. Manual for Docker
 
 Users need to have installed `Docker Desktop` in your computer or any suitable machines.
 Please refer to https://www.docker.com/products/docker-desktop.
@@ -149,7 +149,7 @@ python init_dbs_customGenome.py ../input/speciesname.fasta
 ```
 Resulting dbs files can to be copied outside of image for future reuse, because closing the docker image will remove all custom changes.
 
-# Manual for Servers 
+# B. Manual for Servers 
 Follow this manual to download `mirLibSpark project` from GitHub and perform runs in a remote server.
 
 Users can choose to use Compute Canada servers or any other servers.
@@ -246,14 +246,14 @@ Submit the submission file in the job queue.
 sbatch submit_init_dbs_ensembl40.sh
 ```
 
-Users can build custom species dbs index. Please refer to section `Build custom species dbs`.
+Users can build custom species dbs index as described in a previous section, `Build custom species dbs`.
 
 
 
 
 
 
-## List and description of outputs
+# C. List and description of outputs
 | Name of output                                           | Description                                                                                                  |
 |----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
 | (1) parameters_and_time.txt                              | the register of user parameters and the execution time records.                                              |
