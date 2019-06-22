@@ -227,7 +227,7 @@ Note that users can analyze the miRNAs using:
 (1) `prediction` pipeline, or 
 (2) `prediction + differential analysis` pipeline, or 
 (3) `prediction + differential analysis + enrichment analysis` pipeline.
-The entire analysis procedure is `(3)`, KEGG pathway enrichment analysis pipeline, while (1) and (2) perform part of the analysis procedure.
+The entire analysis procedure is `(3)`, while (1) and (2) perform part of the analysis procedure are shown for pedagogic purpose in this manual.
 For details of how to set up the command lines, please see in this manual section A1, A2, and A3, respectievly.
 
 Step 3: submit the submission file in the job queue
