@@ -41,8 +41,13 @@ module load python/2.7.14
 #                       seaborn (includes: matplotlib)
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
-pip install --user requests
-pip install --user -r requirements.txt
+pip install --no-index --upgrade pip
+pip install --no-index -r requirements.txt
+#
+#virtualenv --no-download $SLURM_TMPDIR/env
+#source $SLURM_TMPDIR/env/bin/activate
+#pip install --user requests
+#pip install --user -r requirements.txt
 #
 #= JAVA memory allocation (space for else than RDD operations)
 export _JAVA_OPTIONS="-Xms3g -Xmx10g"
