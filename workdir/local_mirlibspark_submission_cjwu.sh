@@ -51,5 +51,5 @@ export _JAVA_OPTIONS="-Xms3g -Xmx10g"
 
 spark-submit --master local[*] \
              --executor-memory ${SLURM_MEM_PER_NODE}M \
-             ../src/mirLibPipeline.py
-
+             ../src/mirLibPipeline.py \
+             --jobid ${SLURM_JOBID}
