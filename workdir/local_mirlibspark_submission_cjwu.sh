@@ -44,19 +44,13 @@ source $SLURM_TMPDIR/env/bin/activate
 pip install --no-index --upgrade pip
 pip install --no-index -r requirements.txt
 #
-#virtualenv --no-download $SLURM_TMPDIR/env
-#source $SLURM_TMPDIR/env/bin/activate
-#pip install --user requests
-#pip install --user -r requirements.txt
-#
 #= JAVA memory allocation (space for else than RDD operations)
 export _JAVA_OPTIONS="-Xms3g -Xmx10g"
-#= identify the Spark cluster with the Slurm jobid
-export SPARK_IDENT_STRING=$SLURM_JOBID
-export SPARK_WORKER_DIR=$SLURM_TMPDIR
+#export SPARK_IDENT_STRING=$SLURM_JOBID
+#export SPARK_WORKER_DIR=$SLURM_TMPDIR
 
 
-spark-submit --master local[8] \
+spark-submit --master local[*] \
              --executor-memory ${SLURM_MEM_PER_NODE}M \
              ../src/mirLibPipeline.py
 
