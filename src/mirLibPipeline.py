@@ -56,7 +56,8 @@ if __name__ == '__main__' :
 
 
   #= Spark application ID
-  appId = str(sc.applicationId)
+  appId = paramDict['jobid']
+  if appId == '--': appId = str(sc.applicationId)
   #print('spark.executor.memory: ', sc._conf.get('spark.executor.memory'))
   #print('spark.driver.memory: ', sc._conf.get('spark.driver.memory'))
   #print('spark.master: ', sc._conf.get('spark.master'))
