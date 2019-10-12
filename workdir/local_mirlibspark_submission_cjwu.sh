@@ -59,5 +59,4 @@ export SPARK_WORKER_DIR=$SLURM_TMPDIR
 spark-submit --master local[8] \
              --executor-memory ${SLURM_MEM_PER_NODE}M \
              ../src/mirLibPipeline.py
-             #pi.py
 
