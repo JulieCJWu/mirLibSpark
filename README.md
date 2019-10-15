@@ -14,7 +14,7 @@ __Title__: MirLibSpark: A Scalable NGS Plant MicroRNA Prediction Pipeline for Mu
 
 __Cite__: Chao-Jung Wu, Amine M. Remita and Abdoulaye Baniré Diallo. 2019, September. MirLibSpark: A Scalable NGS Plant MicroRNA Prediction Pipeline for Multi-Library Functional Annotation. ParBio'19-8th Workshop on Parallel and Cloud-based Bioinformatics and Biomedicine. In Proceedings of the 10th ACM International Conference on Bioinformatics, Computational Biology and Health Informatics Pages 669-674. ACM.
 
-__bib__:
+__bib Tex__:
 ```
 @article{wu2019mirlibspark,
   title={MirLibSpark: A Scalable NGS Plant MicroRNA Prediction Pipeline for Multi-Library Functional Annotation},
