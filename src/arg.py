@@ -101,14 +101,14 @@ def getOpt (parser):
       filename2 = 'ko_gene_vs_pathway.txt'
       filename3 = 'ko_pathway_description.txt'
       chromosomes = '1A,1B,1D,2A,2B,2D,3A,3B,3D,4A,4B,4D,5A,5B,5D,6A,6B,6D,7A,7B,7D'
-      args.chromosomes = chromosomes
+      if args.chromosomes == None: args.chromosomes = chromosomes
     elif args.species == 'corn': 
       bowtie_index_prefix = 'CORN_AGPv4'
       filename1 = 'Zea_mays.AGPv4.cdna.all.fa.gz'
       filename2 = 'zma_gene_vs_pathway.txt'
       filename3 = 'zma_pathway_description.txt'
       chromosomes = '1,2,3,4,5,6,7,8,9,10,Mt,Pt'
-      args.chromosomes = chromosomes
+      if args.chromosomes == None: args.chromosomes = chromosomes
     elif args.species == 'rice': 
       bowtie_index_prefix = 'RICE_IRGSP_1'
       filename1 = 'Oryza_sativa.IRGSP-1.0.cdna.all.fa'
