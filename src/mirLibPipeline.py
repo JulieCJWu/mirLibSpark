@@ -53,7 +53,7 @@ if __name__ == '__main__' :
 
   #= Spark context
   #sc = ut.pyspark_configuration(appMaster, appName, mstrMemory, execMemory, heartbeat)
-  sc = ut.pyspark_configuration(appName, masterMemory, heartbeat)
+  sc = ut.pyspark_configuration(appName, mstrMemory, heartbeat)
 
 
   #= Spark application ID
