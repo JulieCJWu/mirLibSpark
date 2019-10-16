@@ -137,6 +137,7 @@ def getOpt (parser):
       filename3 = 'ats_pathway_description.txt'
       chromosomes = 'toplevel'
       args.chromosomes = 'All'
+    '''
     elif args.species == 'custom':
       args.bowtie_index_prefix = args.species
       #if args.bowtie_index_prefix == None:
@@ -147,6 +148,25 @@ def getOpt (parser):
         sys.stderr.write('target_file must be provided for custom species.\n\
                           Exit the program.')
         sys.exit()
+      if args.perform_KEGGpathways_enrichment_analysis == True:
+        if args.gene_vs_pathway_file == None:
+          sys.stderr.write('gene_vs_pathway_file must be provided for custom species.\n\
+                            Exit the program.')
+          sys.exit()
+        if args.pathway_description_file == None:
+          sys.stderr.write('pathway_description_file must be provided for custom species.\n\
+                            Exit the program.')
+          sys.exit()
+    '''
+    elif args.species == 'custom':
+      args.bowtie_index_prefix = args.species
+      if args.bowtie_index_prefix == None:
+        sys.stderr.write('bowtie_index_prefix must be provided for custom species.\n\
+                          Exit the program.')
+        sys.exit()
+      if args.target_file == None:
+        sys.stderr.write('target_file must be provided for custom species.\n\
+                          Exit the program.')
       if args.perform_KEGGpathways_enrichment_analysis == True:
         if args.gene_vs_pathway_file == None:
           sys.stderr.write('gene_vs_pathway_file must be provided for custom species.\n\
