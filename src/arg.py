@@ -44,7 +44,6 @@ def getOpt (parser):
     parser.add_argument('--b_index_path')
     parser.add_argument('--bowtie_mismatch', default = '0')
     parser.add_argument('--known_non_file', help='Only ath is provided.')
-    #parser.add_argument('--chromosomes', choices=['All', 'split'], help='Only ath has options. Other species have only one default choice. Genomes larger than 1G are splitted by chromosomes, otherwise all choromsomes are in one file.')
     parser.add_argument('--chromosomes', help='{All,split} Only ath has options. Other species have only one default choice. Genomes larger than 1G are splitted by chromosomes, otherwise all choromsomes are in one file.')
     parser.add_argument('--target_file')
     parser.add_argument('--perform_differential_analysis', default='False', action='store_true')
@@ -73,8 +72,8 @@ def getOpt (parser):
     parser.add_argument('--nbTargets', default='100')
     parser.add_argument('--sc_partition', default='64')
     parser.add_argument('--sc_mstrmemory', default='20g')
-    parser.add_argument('--sc_execmemory', default='20g')
-    parser.add_argument('--sc_master', default='local[*]')
+    ###parser.add_argument('--sc_execmemory', default='20g')
+    ###parser.add_argument('--sc_master', default='local[*]')
     parser.add_argument('--sc_heartbeat', default='10')
     parser.add_argument('--jobid', default='--')
     #
@@ -159,6 +158,7 @@ def getOpt (parser):
           sys.exit()
     #
     if args.bowtie_index_prefix == None: args.bowtie_index_prefix = bowtie_index_prefix
+    else: args.species = bowtie_index_prefix
     #
     key = '/dbs/' + args.bowtie_index_prefix + '/Genome/'
     if args.genome_path == None: args.genome_path = args.project_path + key   
