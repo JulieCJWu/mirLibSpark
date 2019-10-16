@@ -27,15 +27,16 @@ def getOpt (parser):
     parser.add_argument('--input_path')
     parser.add_argument('--output_path')
     parser.add_argument('--species', default = 'ath',\
-                         choices=['ath', 'wheat', 'corn', 'rice', 'potato', 'brome', 'wheatD', 'custom'],
+                         choices=['ath', 'wheat', 'corn', 'rice', 'potato', 'brome', 'wheatD', 'custom', 'other'],
                          help='ath: 	Arabidopsis_thaliana.TAIR10;\
                                wheat: 	Triticum_aestivum.IWGSC;\
                                corn: 	Zea_mays.AGPv4;\
                                rice: 	Oryza_sativa.IRGSP-1.0;\
-                               potato: Solanum_tuberosum.SolTub_3.0;\
+                               potato:  Solanum_tuberosum.SolTub_3.0;\
                                brome: 	Brachypodium_distachyon.Brachypodium_distachyon_v3.0;\
-                               wheatD: Aegilops_tauschii.ASM34733v1;\
-                               custom: custom species.\
+                               wheatD:  Aegilops_tauschii.ASM34733v1;\
+                               custom:  custom species;\
+                               other:   testing.
                                Please use provided script to construct the dbs folder for selected species from ensembl-release40.')
     parser.add_argument('--input_type', default='w', choices=['readcounts', 'w', 'reads','r', 'fasta', 'a', 'fastq', 'q'])
     parser.add_argument('--adapter', default='none', help='example = TGGAATTCTCGGGTGCCAAGGAACTC')
@@ -158,7 +159,6 @@ def getOpt (parser):
           sys.exit()
     #
     if args.bowtie_index_prefix == None: args.bowtie_index_prefix = bowtie_index_prefix
-    else: args.species = bowtie_index_prefix
     #
     key = '/dbs/' + args.bowtie_index_prefix + '/Genome/'
     if args.genome_path == None: args.genome_path = args.project_path + key   
