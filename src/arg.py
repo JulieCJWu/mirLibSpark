@@ -36,7 +36,7 @@ def getOpt (parser):
                                brome: 	Brachypodium_distachyon.Brachypodium_distachyon_v3.0;\
                                wheatD:  Aegilops_tauschii.ASM34733v1;\
                                custom:  custom species;\
-                               other:   testing.
+                               other:   testing.\
                                Please use provided script to construct the dbs folder for selected species from ensembl-release40.')
     parser.add_argument('--input_type', default='w', choices=['readcounts', 'w', 'reads','r', 'fasta', 'a', 'fastq', 'q'])
     parser.add_argument('--adapter', default='none', help='example = TGGAATTCTCGGGTGCCAAGGAACTC')
