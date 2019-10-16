@@ -27,7 +27,7 @@ def getOpt (parser):
     parser.add_argument('--input_path')
     parser.add_argument('--output_path')
     parser.add_argument('--species', default = 'ath',\
-                         choices=['ath', 'wheat', 'corn', 'rice', 'potato', 'brome', 'wheatD', 'custom', 'other'],
+                         choices=['ath', 'wheat', 'corn', 'rice', 'potato', 'brome', 'wheatD', 'custom'],
                          help='ath: 	Arabidopsis_thaliana.TAIR10;\
                                wheat: 	Triticum_aestivum.IWGSC;\
                                corn: 	Zea_mays.AGPv4;\
@@ -36,7 +36,6 @@ def getOpt (parser):
                                brome: 	Brachypodium_distachyon.Brachypodium_distachyon_v3.0;\
                                wheatD:  Aegilops_tauschii.ASM34733v1;\
                                custom:  custom species;\
-                               other:   testing.\
                                Please use provided script to construct the dbs folder for selected species from ensembl-release40.')
     parser.add_argument('--input_type', default='w', choices=['readcounts', 'w', 'reads','r', 'fasta', 'a', 'fastq', 'q'])
     parser.add_argument('--adapter', default='none', help='example = TGGAATTCTCGGGTGCCAAGGAACTC')
@@ -157,8 +156,6 @@ def getOpt (parser):
           sys.stderr.write('pathway_description_file must be provided for custom species.\n\
                             Exit the program.')
           sys.exit()
-    elif args.species == 'other':
-      args.bowtie_index_prefix = args.species
     #
     if args.bowtie_index_prefix == None: args.bowtie_index_prefix = bowtie_index_prefix
     #
