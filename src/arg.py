@@ -156,8 +156,7 @@ def getOpt (parser):
         if args.pathway_description_file == None:
           sys.stderr.write('pathway_description_file must be provided for custom species.\n\
                             Exit the program.')
-          sys.exit()
-    '''
+          sys.exit()'''
     elif args.species == 'custom':
       args.bowtie_index_prefix = args.species
       if args.bowtie_index_prefix == None:
