@@ -20,12 +20,11 @@ find a time to refactor diff analysis and enrichment analysis, make them into ob
 '''
 #from __future__ import print_function
 import os
+import os.path
 import re
 import subprocess
 import sys
-
-import os.path
-from os import listdir
+#from os import listdir
 
 
 def find_RNAfold_path ():
@@ -53,7 +52,7 @@ def validate_options(paramDict):
     sys.stderr.write("KEGG pathway enrichment analysis must be done after differential expression analysis.\nExit the program.")
     sys.exit()
   
-  infiles = [f.split('.')[0] for f in listdir(rep_input) if os.path.isfile(os.path.join(rep_input, f))]
+  infiles = [f.split('.')[0] for f in os.listdir(rep_input) if os.path.isfile(os.path.join(rep_input, f))]
   if len(infiles) == 0: 
     sys.stderr.write('ERROR: input file is missing')
     sys.exit()

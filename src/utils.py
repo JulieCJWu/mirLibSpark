@@ -12,14 +12,13 @@ support python3 print syntax
 #= 2018-10-28 note:
 find a time to refactor diff analysis and enrichment analysis, make them into objects
 '''
-from __future__ import print_function
+#from __future__ import print_function
 import os
-import re
-import subprocess
-import sys
-
 import os.path
-from os import listdir
+#import re
+#import subprocess
+#import sys
+#from os import listdir
 
 
 
