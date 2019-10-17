@@ -23,39 +23,6 @@ from os import listdir
 
 
 
-def validate_options(paramDict):
-  '''
-  wip: examine the combination of the parameters to see if it is compatible logically
-  '''
-  input_type = paramDict['input_type']
-  adapter = paramDict['adapter']
-  rep_input = paramDict['input_path']
-  diffguide_file = paramDict['diffguide_file']
-  perform_differential_analysis = paramDict['perform_differential_analysis']
-  perform_KEGGpathways_enrichment_analysis= paramDict['perform_KEGGpathways_enrichment_analysis']
-
-  if input_type == 'a' and not adapter == 'none':
-    sys.stderr.write("The adapter option must be 'none' for the input_type_a.\nExit the program.")
-    sys.exit()
-
-  if perform_KEGGpathways_enrichment_analysis == 'yes' and perform_differential_analysis == 'no':
-    sys.stderr.write("KEGG pathway enrichment analysis must be done after differential expression analysis.\nExit the program.")
-    sys.exit()
-  
-  infiles = [f.split('.')[0] for f in listdir(rep_input) if os.path.isfile(os.path.join(rep_input, f))]
-  if len(infiles) == 0: 
-    sys.stderr.write('ERROR: input file is missing')
-    sys.exit()
-
-  #= verify if input folder contain all files requisted by diffguide file
-  if perform_differential_analysis == 'yes':
-
-    #testInfiles = [f.split('.')[0] for f in infiles]
-    diffguide, neededInfiles = __read_diffguide(diffguide_file)
-    for infile in neededInfiles:
-      if infile not in infiles: 
-        sys.stderr.write('One or more input files requested by diffguide_file are not provided in the input folder.\nExit the program.')
-        sys.exit()
 
 def transpose_txt(infile, outfile):
     with open(infile, 'r') as f:
@@ -77,26 +44,24 @@ def find_RNAfold_path ():
   path_RNAfold = out[:-8]
   return path_RNAfold
 
+# source : https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python/23728630#23728630
+def randomStrGen (n):
+  import string, random
+  return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
+
+def roundup(x): 
+  return x if x % 10 == 0 else x + 10 - x % 10
+
 # Configure a spark context
 def pyspark_configuration(appName, masterMemory, heartbeat):
   from pyspark import SparkConf, SparkContext
   myConf = SparkConf()
   myConf.setAppName(appName)  #= 'mirLibSpark'
-  ###myConf.setMaster(appMaster) #= 'local[2] or local[*]'
-  #
   myConf.set("spark.driver.maxResultSize", '1500M') #= default 1g
   myConf.set("spark.driver.memory", masterMemory)
-  ###myConf.set("spark.executor.memory", execMemory)
-  #
   timeout = heartbeat * 12
   myConf.set('spark.network.timeout', str(timeout) + 's')
   myConf.set('spark.executor.heartbeatInterval', str(heartbeat) + 's')
-  #
-  #= no need to configure the followings
-  #myConf.set("spark.cores.max", execCores) 
-  # other keys: "spark.master" = 'spark://5.6.7.8:7077'
-  #             "spark.driver.cores"
-  #             "spark.default.parallelism"
   return SparkContext(conf = myConf)
 
 def convertTOhadoop(rfile, hdfsFile):
@@ -107,47 +72,6 @@ def convertTOhadoop(rfile, hdfsFile):
   print('if pre-existing in hdfs, the file would be deleted before the re-distribution of a new file with the same name.\n')
   os.system('hadoop fs -rm ' + hdfsFile) # force delete any pre-existing file in hdfs with the same name.
   os.system('hadoop fs -copyFromLocal ' + rfile + ' ' + hdfsFile)
-
-def covert_fasta_to_KeyValue(infile, outfile):
-  '''
-  Convert a fasta file into a key value file
-  defunct
-  '''
-  fh = open (infile, 'r')
-  DATA = fh.readlines()
-  fh.close()
-  dict_sRNA = {}
-  for i in xrange(0, len(DATA), 2):
-      key = DATA[i].rstrip('\n')[1:]
-      value = DATA[i+1].rstrip('\n')
-      dict_sRNA[key] = value
-  fh_out = open (outfile, 'w')
-  for k, v in dict_sRNA.items():
-      print (k + ':' + v, file=fh_out)
-  fh_out.close()
-
-def convert_seq_freq_file_to_KeyValue(infile, outfile, v_sep):
-  '''
-  Convert a seq abundance file into a key value file
-  defunct
-  '''
-  fh = open (infile, 'r')
-  fh_out = open (outfile, 'w')
-
-  dict_sRNA = {}
-  i = 1
-  
-  for line in fh:
-    data = line.rstrip('\n').split('\t')
-    value = data[0] + v_sep + data[1]
-    
-    #= check if the read was treated before (redundancy)
-    if data[0] not in dict_sRNA:
-      dict_sRNA[data[0]] = 1
-      print (value, file=fh_out)
-      
-  fh.close()
-  fh_out.close()
 
 def convert_fastq_file_to_KeyValue(infile, rep_tmp, inBasename):
   '''
@@ -205,21 +129,18 @@ def trim_adapter (seq, ad):
   return seq
 
 def getRevComp (seq):
-  intab = "ACGT"
-  outab = "TGCA"
+  intab, outab = "ACGT", "TGCA"
   trantab = str.maketrans(intab, outab)
   n_seq = seq.translate(trantab)
   return n_seq[::-1]
 
 def tr_T_U (seq):
-  intab = "T"
-  outab = "U"
+  intab, outab = "T", "U"
   trantab = str.maketrans(intab, outab)
   return seq.translate(trantab)
 
 def tr_U_T (seq):
-  intab = "U"
-  outab = "T"
+  intab, outab = "U", "T"
   trantab = str.maketrans(intab, outab)
   return seq.translate(trantab)
 
@@ -242,22 +163,9 @@ def getFastaSeq (file):
   fh.close()
   return seq
 
-def getGenome__ (genome_path, file_ext):
-  ''' defunct '''
-  genome = dict()
-  files = [each for each in os.listdir(genome_path) if each.endswith(file_ext)]
-  for namefile in files :
-    file = genome_path+namefile
-    chr = getChromosomeName(file)
-    sequence = getFastaSeq(file)
-    genome[chr] = sequence
-  return genome
-
 def getGenome (genome_path, file_ext, chromosomeName='All'):
   '''
-  modified version of original getGenome__()
-  this new function can take in either All as the entire genome, or one chromosome at a time.
-  this is a measure for reducing memory use
+  take in either All as the entire genome, or one chromosome at a time.
   '''
   genome = dict()
   if chromosomeName == 'All':
@@ -284,6 +192,92 @@ def readParam (paramfile, sep = '='):
       data = line.rstrip('\r\n').split(sep)
       paramDict[data[0]] = data[1]
   return paramDict
+
+def writeTimeLibToFile (timeDict, outfile, appId, paramDict):
+  import datetime
+  
+  totalTimeSec = reduce((lambda x,y : x + y), timeDict.values())
+  totalTimeHMS = str(datetime.timedelta(seconds=totalTimeSec))
+  totalTimeSec = format(totalTimeSec, '.3f')
+  
+  fh_out = open (outfile, 'w')
+  print(datetime.datetime.now(), file=fh_out)
+  print("# Application ID " + appId +"\n", file=fh_out)
+  print("Total \t"+totalTimeHMS+ "\t" + totalTimeSec, file=fh_out)
+
+  for lib in timeDict :
+    timeLibSec = timeDict[lib]
+    timeLibHMS = str(datetime.timedelta(seconds=timeLibSec))
+    timeLibSec = format(timeLibSec, '.3f')
+    print("Lib "+lib+"\t"+timeLibHMS+"\t"+timeLibSec, file=fh_out)
+    print ("Lib "+lib+"\t"+timeLibHMS+"\t"+timeLibSec) #= stdout
+  
+  print("\n# SPARK configuration:", file=fh_out)
+
+  for key in paramDict :
+    if key.startswith("sc_"):
+      print("# " + key + ": " + paramDict[key], file=fh_out)
+
+  print("\n# MirLibSpark configuration:", file=fh_out)
+
+  for key in sorted(paramDict.keys()) :
+    if not key.startswith("sc_"):
+      print("# " + key + ": " + paramDict[key], file=fh_out)
+ 
+  fh_out.close()
+
+
+
+
+
+
+
+
+
+#========================================================================================================================================
+#========================================================================================================================================
+#========================================================================================================================================
+#=
+#=  MIRLIBSPARK SPECIFIC
+#=
+#========================================================================================================================================
+#========================================================================================================================================
+#========================================================================================================================================
+#========================================================================================================================================
+
+def validate_options(paramDict):
+  '''
+  wip: examine the combination of the parameters to see if it is compatible logically
+  '''
+  input_type = paramDict['input_type']
+  adapter = paramDict['adapter']
+  rep_input = paramDict['input_path']
+  diffguide_file = paramDict['diffguide_file']
+  perform_differential_analysis = paramDict['perform_differential_analysis']
+  perform_KEGGpathways_enrichment_analysis= paramDict['perform_KEGGpathways_enrichment_analysis']
+
+  if input_type == 'a' and not adapter == 'none':
+    sys.stderr.write("The adapter option must be 'none' for the input_type_a.\nExit the program.")
+    sys.exit()
+
+  if perform_KEGGpathways_enrichment_analysis == 'yes' and perform_differential_analysis == 'no':
+    sys.stderr.write("KEGG pathway enrichment analysis must be done after differential expression analysis.\nExit the program.")
+    sys.exit()
+  
+  infiles = [f.split('.')[0] for f in listdir(rep_input) if os.path.isfile(os.path.join(rep_input, f))]
+  if len(infiles) == 0: 
+    sys.stderr.write('ERROR: input file is missing')
+    sys.exit()
+
+  #= verify if input folder contain all files requisted by diffguide file
+  if perform_differential_analysis == 'yes':
+
+    #testInfiles = [f.split('.')[0] for f in infiles]
+    diffguide, neededInfiles = __read_diffguide(diffguide_file)
+    for infile in neededInfiles:
+      if infile not in infiles: 
+        sys.stderr.write('One or more input files requested by diffguide_file are not provided in the input folder.\nExit the program.')
+        sys.exit()
 
 def containsOnlyOneLoop (folding):
     '''
@@ -332,7 +326,6 @@ def containsOnlyOneLoop (folding):
       return False
     return True
 
-
 def writeToFile (results, outfile):
     ## in: ('seq', [freq, nbLoc, ['strd','chr',posChr], ['priSeq',posMirPri,'priFold', 'mkPred','mkStart','mkStop'], ['preSeq',posMirPre,'preFold','mpPred','mpScore'], totalfrq]) 
     fh_out = open (outfile, 'w')
@@ -377,39 +370,6 @@ def writeToFile (results, outfile):
       line = '\t'.join([str(d) for d in data])
       print(line, file=fh_out)
     fh_out.close()
-
-def writeTimeLibToFile (timeDict, outfile, appId, paramDict):
-  import datetime
-  
-  totalTimeSec = reduce((lambda x,y : x + y), timeDict.values())
-  totalTimeHMS = str(datetime.timedelta(seconds=totalTimeSec))
-  totalTimeSec = format(totalTimeSec, '.3f')
-  
-  fh_out = open (outfile, 'w')
-  print(datetime.datetime.now(), file=fh_out)
-  print("# Application ID " + appId +"\n", file=fh_out)
-  print("Total \t"+totalTimeHMS+ "\t" + totalTimeSec, file=fh_out)
-
-  for lib in timeDict :
-    timeLibSec = timeDict[lib]
-    timeLibHMS = str(datetime.timedelta(seconds=timeLibSec))
-    timeLibSec = format(timeLibSec, '.3f')
-    print("Lib "+lib+"\t"+timeLibHMS+"\t"+timeLibSec, file=fh_out)
-    print ("Lib "+lib+"\t"+timeLibHMS+"\t"+timeLibSec) #= stdout
-  
-  print("\n# SPARK configuration:", file=fh_out)
-
-  for key in paramDict :
-    if key.startswith("sc_"):
-      print("# " + key + ": " + paramDict[key], file=fh_out)
-
-  print("\n# MirLibSpark configuration:", file=fh_out)
-
-  for key in sorted(paramDict.keys()) :
-    if not key.startswith("sc_"):
-      print("# " + key + ": " + paramDict[key], file=fh_out)
- 
-  fh_out.close()
 
 def writeSummaryExpressionToFile (infiles, rep_output, appId):
   '''
@@ -655,11 +615,6 @@ def __write_html (DATA, rep_output, appId):
 
   fh_out.close()
 
-# source : https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python/23728630#23728630
-def randomStrGen (n):
-  import string, random
-  return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(n))
-
 def get_nonMirna_coors (infile):
   #= infile = '../dbs/TAIR10_ncRNA_CDS.gff'
   idnb = 0
@@ -709,12 +664,8 @@ def __read_diffguide (infile):
   return diffguide[1:], needed_infilenames
 
 def __write_diff_output (a, b, rep, appId):
-  #rep = '../output/'
-  #appId = 'local-1538031347138'
   infile = rep + appId + '_summaryFreq.txt'
-
   #= a/b: a: numerator, b: denominator
-  #= a = 'fake_a3'; b = 'fake_a'
   outfile = rep + appId + '_diff_' + a + '_' + b + '.txt'
   with open (infile, 'r') as fh: DATA = [x.rstrip('\n').split('\t') for x in fh.readlines()]
 
@@ -815,7 +766,4 @@ def perform_enrichment_analysis (diff_outs, pathway_description_file, list_mirna
   os.system(cmd)
   cmd = 'cp ' + rep_output + keyword + '/output_comput_enrich/* ' + rep_output
   os.system(cmd)
-  
-def roundup(x): 
-  return x if x % 10 == 0 else x + 10 - x % 10
 
