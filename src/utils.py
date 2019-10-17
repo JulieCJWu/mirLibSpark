@@ -664,8 +664,8 @@ def __read_diffguide (infile):
   return diffguide[1:], needed_infilenames
 
 def __write_diff_output (a, b, rep, appId):
-  infile = rep + appId + '_summaryFreq.txt'
   #= a/b: a: numerator, b: denominator
+  infile = rep + appId + '_summaryFreq.txt'
   outfile = rep + appId + '_diff_' + a + '_' + b + '.txt'
   with open (infile, 'r') as fh: DATA = [x.rstrip('\n').split('\t') for x in fh.readlines()]
 
