@@ -3,8 +3,8 @@ program: utils.py
 author: Chao-Jung Wu
 author: M.A.Remita
 date: 2017-03-25
-update: 2018-09-18
-version: 1.00.01
+update: 2019-10-16
+version: 1.00.02
 
 support python3 print syntax
 
@@ -64,7 +64,6 @@ def transpose_txt(infile, outfile):
     for x in zip(*lis):
         for y in x:
             print(y+'\t', end='', file=fho)
-            #print >>fho, y+'\t', # the comma in the final signals not to print a new line in python2.x
         print('', file=fho)
 
 def makedirs_reps (reps):
@@ -73,34 +72,10 @@ def makedirs_reps (reps):
       os.makedirs(rep)
 
 def find_RNAfold_path ():
-  #= colosse = /software6/bioinfo/apps/mugqic_space/software/ViennaRNA/ViennaRNA-2.1.8/bin/
   proc = subprocess.Popen(['which RNAfold'], stdout=subprocess.PIPE, shell=True)
   (out, err) = proc.communicate()
   path_RNAfold = out[:-8]
   return path_RNAfold
-'''
-# Configure a spark context
-def pyspark_configuration(appMaster, appName, masterMemory, execMemory, heartbeat):
-  from pyspark import SparkConf, SparkContext
-  myConf = SparkConf()
-  myConf.setAppName(appName)  #= 'mirLibSpark'
-  myConf.setMaster(appMaster) #= 'local[2] or local[*]'
-  #
-  myConf.set("spark.driver.maxResultSize", '1500M') #= default 1g
-  myConf.set("spark.driver.memory", masterMemory)
-  myConf.set("spark.executor.memory", execMemory)
-  #
-  timeout = heartbeat * 12
-  myConf.set('spark.network.timeout', str(timeout) + 's')
-  myConf.set('spark.executor.heartbeatInterval', str(heartbeat) + 's')
-  #
-  #= no need to configure the followings
-  #myConf.set("spark.cores.max", execCores) 
-  # other keys: "spark.master" = 'spark://5.6.7.8:7077'
-  #             "spark.driver.cores"
-  #             "spark.default.parallelism"
-  return SparkContext(conf = myConf)
-'''
 
 # Configure a spark context
 def pyspark_configuration(appName, masterMemory, heartbeat):
@@ -123,7 +98,6 @@ def pyspark_configuration(appName, masterMemory, heartbeat):
   #             "spark.driver.cores"
   #             "spark.default.parallelism"
   return SparkContext(conf = myConf)
-
 
 def convertTOhadoop(rfile, hdfsFile):
   '''
@@ -233,25 +207,20 @@ def trim_adapter (seq, ad):
 def getRevComp (seq):
   intab = "ACGT"
   outab = "TGCA"
-  #= v1 ================================
-  from string import maketrans
-  trantab = maketrans(intab, outab)
-  #= v2 ================================
-  #trantab = str.maketrans(intab, outab)
-  #=====================================
-  n_seq = seq.translate(trantab)
-  return n_seq[::-1]
+  trantab = str.maketrans(intab, outab)
   n_seq = seq.translate(trantab)
   return n_seq[::-1]
 
 def tr_T_U (seq):
-  from string import maketrans
-  trantab = maketrans("T", "U")
+  intab = "T"
+  outab = "U"
+  trantab = str.maketrans(intab, outab)
   return seq.translate(trantab)
 
 def tr_U_T (seq):
-  from string import maketrans
-  trantab = maketrans("U", "T")
+  intab = "U"
+  outab = "T"
+  trantab = str.maketrans(intab, outab)
   return seq.translate(trantab)
 
 def getChromosomeName (file):
@@ -282,7 +251,6 @@ def getGenome__ (genome_path, file_ext):
     chr = getChromosomeName(file)
     sequence = getFastaSeq(file)
     genome[chr] = sequence
-    
   return genome
 
 def getGenome (genome_path, file_ext, chromosomeName='All'):
@@ -312,7 +280,6 @@ def readParam (paramfile, sep = '='):
     if line.startswith('message'): 
       msg = line.rstrip('\r\n')[8:].split('\\n')
       paramDict['message'] = '\n'.join(msg)
-    #  for i in msg: print(i)
     elif not line.startswith("#"):
       data = line.rstrip('\r\n').split(sep)
       paramDict[data[0]] = data[1]
@@ -452,22 +419,10 @@ def writeSummaryExpressionToFile (infiles, rep_output, appId):
   #= .trs is a temporary extension, such file will be transposed at the end of this function
   outfile = rep_output + appId + '_summaryFreq.trs' 
   outfile2 = rep_output + appId + '_summaryBinary.trs'
-  #outfile3 = rep_output + appId + '_summaryGenoLoci.txt' #= outfile3 is not in a good format yet
 
   fh_out = open (outfile, 'w')
   fh_out2 = open (outfile2, 'w')
-  #fh_out3 = open (outfile3, 'w')
   
-  #line_seen = []
-  #for f in sorted(infiles):
-  #  with open (rep_output + f, 'r') as fh:
-  #    for line in fh:
-  #      line=line.rstrip('\n')
-  #      if line not in line_seen:
-  #        line_seen.append(line)
-  #      print >> fh_out3, line
-  #fh_out3.close()
-
   master_predicted_distinctMiRNAs = []
   tmp_master_distinctPrecursor_infos = {}
   for f in sorted(infiles):
