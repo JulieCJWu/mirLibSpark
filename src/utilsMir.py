@@ -33,6 +33,15 @@ def find_RNAfold_path ():
   path_RNAfold = out[:-8]
   return path_RNAfold
 
+def transpose_txt(infile, outfile):
+    with open(infile, 'r') as f:
+        lis = [x.rstrip('\n').split('\t') for x in f]
+    fho = open (outfile, 'w')
+    for x in zip(*lis):
+        for y in x:
+            print(y+'\t', end='', file=fho)
+        print('', file=fho)
+
 def validate_options(paramDict):
   '''
   wip: examine the combination of the parameters to see if it is compatible logically
