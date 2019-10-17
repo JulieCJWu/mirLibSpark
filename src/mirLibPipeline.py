@@ -28,7 +28,7 @@ import datetime
 from os import listdir
 #
 import utils as ut
-import utilsMIR as utm
+import utilsMir as utm
 import mirLibRules as mru
 import arg
 
@@ -156,6 +156,7 @@ if __name__ == '__main__' :
 
   #= addFile
   sc.addPyFile(project_path + '/src/utils.py')
+  sc.addPyFile(project_path + '/src/utilsMir.py')
   sc.addPyFile(project_path + '/src/mirLibRules.py')
   sc.addFile(project_path + '/src/eval_mircheck.pl')
   sc.addFile(project_path + '/lib/miRcheck.pm')
