@@ -12,7 +12,7 @@ support python3 print syntax
 #= 2018-10-28 note:
 find a time to refactor diff analysis and enrichment analysis, make them into objects
 '''
-#from __future__ import print_function
+from __future__ import print_function
 import os
 import os.path
 #import re
@@ -20,7 +20,7 @@ import os.path
 #import sys
 #from os import listdir
 
-
+pythonV = 2
 
 
 def transpose_txt(infile, outfile):
@@ -121,21 +121,37 @@ def trim_adapter (seq, ad):
     else: ad = ad[:-1]
   return seq
 
+
+#===========================================================
+#===========================================================
+#===========================================================
+#===========================================================
+def stringTrans (v, intab, outab):
+  if v == 2:
+    from string import maketrans
+    trantab = maketrans(intab, outab)
+  if v == 3:
+    trantab = str.maketrans(intab, outab)
+  return trantab
+
 def getRevComp (seq):
   intab, outab = "ACGT", "TGCA"
-  trantab = str.maketrans(intab, outab)
+  trantab = stringTrans (pythonV, intab, outab)
   n_seq = seq.translate(trantab)
   return n_seq[::-1]
 
 def tr_T_U (seq):
   intab, outab = "T", "U"
-  trantab = str.maketrans(intab, outab)
+  trantab = stringTrans (pythonV, intab, outab)
   return seq.translate(trantab)
 
 def tr_U_T (seq):
   intab, outab = "U", "T"
-  trantab = str.maketrans(intab, outab)
+  trantab = stringTrans (pythonV, intab, outab)
   return seq.translate(trantab)
+#===========================================================
+#===========================================================
+#===========================================================
 
 def getChromosomeName (file):
   desc = ""

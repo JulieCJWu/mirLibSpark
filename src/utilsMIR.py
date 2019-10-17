@@ -18,7 +18,7 @@ version: 1.00.02
 #= 2018-10-28 note:
 find a time to refactor diff analysis and enrichment analysis, make them into objects
 '''
-#from __future__ import print_function
+from __future__ import print_function
 import os
 import os.path
 import re
