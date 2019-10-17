@@ -56,6 +56,7 @@ if __name__ == '__main__' :
   sc = ut.pyspark_configuration(appName, mstrMemory, heartbeat)
 
 
+
   #= Spark application ID
   appId = paramDict['jobid']
   if appId == '--': appId = str(sc.applicationId)
