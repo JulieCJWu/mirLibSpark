@@ -20,7 +20,7 @@ import os.path
 #import sys
 #from os import listdir
 
-pythonV = 2
+pythonV = 3
 
 
 def transpose_txt(infile, outfile):
