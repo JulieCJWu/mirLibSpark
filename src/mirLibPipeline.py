@@ -489,7 +489,7 @@ if __name__ == '__main__' :
   outTime = rep_output + appId + '_time.txt'
   ut.writeTimeLibToFile (timeDict, outTime, appId, paramDict)
 
-  
+  '''
   #===============================================================================================================
   #=
   #= Post processing after miRNA prediction
@@ -540,7 +540,7 @@ if __name__ == '__main__' :
   #                               .reduce(lambda a, b: a+b)
   #master_distinctTG = sorted(list(set(master_distinctTG)))
   #print( master_distinctTG )
-
+  '''
 
   #= clear caches (memory leak)
   broadcastVar_paramDict.unpersist()
