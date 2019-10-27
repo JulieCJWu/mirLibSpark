@@ -578,7 +578,7 @@ if __name__ == '__main__' :
 
     #print(datetime.datetime.now(), 'NB len300_rdd: ', len300_rdd.groupByKey().count(), '\t\tremoved sequences with precursor length >= ', premirna_max_len)
     set11 = len300_rdd.groupByKey().map(lambda e: e[0]).collect()
-    print(datetime.datetime.now(), 'set11\t\tremoved sequences with precursor length >= ', premirna_max_len, 'remaining NB = ', len(se11))
+    print(datetime.datetime.now(), 'set11\t\tremoved sequences with precursor length >= ', premirna_max_len, 'remaining NB = ', len(set11))
     outfile = rep_output  +  appId + '_excludedItems_set11_' + inBasename + '.txt'
     data = list(set(set10)-set(set11))
     with open (outfile, 'w') as fh: 
