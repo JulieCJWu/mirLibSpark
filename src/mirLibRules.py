@@ -12,16 +12,6 @@ from operator import itemgetter
 
 bin = ''
 
-   
-def slimrule (e):
-  ## in: ('seq', [freq, nbLoc, ['strd','chr',posChr], ['priSeq',posMirPri,'priFold', 'mkPred','mkStart','mkStop'], ['preSeq',posMirPre,'preFold','mpPred','mpScore'], totalfrq])
-  ## out: ('seq', [freq, nbLoc, ['strd','chr',posChr], ['slimmed',posMirPri,'slimmed', 'mkPred','mkStart','mkStop'], ['preSeq',posMirPre,'preFold','mpPred','mpScore'], totalfrq])
-  data = e[1][3]
-  data[0] = 'slimmed'
-  data[2] = 'slimmed'
-  return (e[0], [e[1][0], e[1][1], e[1][2], data, e[1][4], e[1][5]])
-
-   
 def slimrule (e):
   ## in: ('seq', [freq, nbLoc, ['strd','chr',posChr], ['priSeq',posMirPri,'priFold', 'mkPred','mkStart','mkStop'], ['preSeq',posMirPre,'preFold','mpPred','mpScore'], totalfrq])
   ## out: ('seq', [freq, nbLoc, ['strd','chr',posChr], ['slimmed',posMirPri,'slimmed', 'mkPred','mkStart','mkStop'], ['preSeq',posMirPre,'preFold','mpPred','mpScore'], totalfrq])
@@ -318,37 +308,50 @@ class prog_mirCheck ():
     
     mirCheck_results = self.run_mirCheck(folding, pos_miRNA_start, pos_miRNA_stop)
     
-    if 'prime' in mirCheck_results[0]:
-      elem[1][field].extend(mirCheck_results)
-    else :
-      del elem[1][field][:]
-      
+    #if 'prime' in mirCheck_results[0]:
+    #  elem[1][field].extend(mirCheck_results)
+    #else :
+    #  del elem[1][field][:]
+    elem[1][field].extend(mirCheck_results)
     return elem
 
 class prog_dominant_profile () :
+  '''
+  preseq = pre_flank + mircheck_precurso + pre_flank
+  len(miR) = len(miR*)
+  variants = sRNA mapping starts one position before, and/or ends one position after miR or miR*
+  len(variants) = {19, 20, ... nt}
+  dominant_formula = sigma( freq (mapping on preseq[c:d, e:f]) ) / sigma( freq (mapping on preseq[a:b]) ), pos inclusive in this illustration.
+  The actual implementation of this class has to use exclusive positions.
+  #========================================================================================================
+  #= ILLUSTRATION
+  #========================================================================================================
+  VARIANTS:        +++..                                                       +++...                      <==== varaints sequence range (ending not explicitly defined)
+                    miR                                                         miR*                       <==== mirseq
+  preflank----------____________________mircheck_precursor__________________________----------preflank     <==== preseq
+  a                c   d                                                       e    f                b     <==== positions
+  #========================================================================================================
+  '''
 
-  def __init__(self):
+  def __init__(self, pre_flank):
     self.env = os.environ
+    self.pre_flank = pre_flank
   
-  def get_bowtie_strandchromo_dict (self, bowtie_rdd_collect):
+  def get_bowtie_chromostrand_dict (self, bowtie_rdd_collect):
     #= bowtie_rdd_collect = (key, [poschr, freq]) #= key = chromo + strand
     dict_bowtie_chromo_strand = {}
-
     for elem in bowtie_rdd_collect :
       chromo_strand = elem[0]
       poschr = elem[1][0]
       freq = elem[1][1]
-   
       if chromo_strand not in dict_bowtie_chromo_strand:
         dict_bowtie_chromo_strand[chromo_strand] = {}
-
       if poschr not in dict_bowtie_chromo_strand[chromo_strand]:
         dict_bowtie_chromo_strand[chromo_strand][poschr] = freq
       else: dict_bowtie_chromo_strand[chromo_strand][poschr] += freq 
-    
     return dict_bowtie_chromo_strand
   
-  def calculateTotalfrq (self, bowbloc, x, y):
+  def __calculateTotalfrq (self, bowbloc, x, y):
     #= bowbloc = {poschr: freq}
     totalfrq = 0
     index = x+1
@@ -357,49 +360,67 @@ class prog_dominant_profile () :
       index += 1
     return totalfrq
 
-  def variants_frq (self, bowbloc, posgen):
+  def __variants_frq (self, bowbloc, x, y, lenmirna):
     '''
-    meyers 2018 takes into account the expression (freq) or 4 variants of both miRNA and corresponding miRNA*.
-    I conclude and simplfy those positions as miRNA=(p, p+1, p-1), miRNA*=(p-2, p-1, p-3)
-    but my current pipeline design can only collect frq of the same chrmo_strand
+    Meyers 2018 takes into account the expression (freq) or 4 variants of both miRNA and corresponding miRNA*.
+    I conclude and simplfy those positions as miRNA=(deb, deb+1, deb-1), miRNA*=(fin, fin+1, fin-1)
+    I consider all lengths of sRNA mapping on these sites, length= 19, 20, 21, ... nt
+    bowbloc does not store the size of sRNA.
     '''
-    x, y = posgen -2, posgen + 2
-    return self.calculateTotalfrq (bowbloc, x, y)
+    a, b = posmir, posstar = x+1, y-(lenmirna-1)+1 #= inclusive
+    freq_varmir  = self.__calculateTotalfrq (bowbloc, a-2, a+2) #varmir  = [a-1, a, a+1]
+    freq_varstar = self.__calculateTotalfrq (bowbloc, b-2, b+2) #varstar = [b-1, b, b+1]
+    return freq_varmir + freq_varstar
 
-  def profile_range (self, elem):
+  def __profile_range (self, elem):
     ''' 
-    define x, y with pre_vld_rdd
-    old : elem = (id, [seq, frq, nbloc, [bowtie], [pri_miRNA], [pre_miRNA]])
-    new : elem = (seq, [frq, nbloc, [bowtie], [pri_miRNA], [pre_miRNA]])
+    Define the profile range as the positions of the deb and fin of the precursor.
+    Note that the precursor here contains extra flaning sequence, pre_flank length.
+    elem = (seq, [frq, nbloc, [bowtie], [pri_miRNA], [pre_miRNA]])
+    pre_miRNA = ['preSeq',posMirPre,'preFold','mpPred','mpScore']
     ''' 
-    posgen = elem[1][2][2]
+    posgen = elem[1][2][2] #= pos on genome
     mirseq = elem[0]
     mirpos_on_pre = elem[1][4][1]
     preseq = elem[1][4][0]
     strand = elem[1][2][0]
-    
     if strand == '+':
       x = posgen - mirpos_on_pre    #= inclusive
       y = x + len(preseq) - 1       #= inclusive
     else:
-      y = posgen + len(mirseq) + mirpos_on_pre -1
-      x = y-len(preseq) + 1
-    return x-1, y+1                  #= exclusive  x < a < y
+      y = posgen + len(mirseq) + mirpos_on_pre - 1
+      x = y - len(preseq) + 1
+    #= adjust for the flanking sequence length, update the exact range of the mircheck precursor
+    x = x + self.pre_flank
+    y = y - self.pre_flank
+    #= if the precursor is located on 20_to_45, then x, y = 19, 46
+    return x-1, y+1 #= exclusive  x < a < y
 
   def computeProfileFrq(self, elem, dict_bowtie_chromo_strand):
-    x, y = self.profile_range (elem)
+    x, y = self.__profile_range (elem) #= exclusive
     bowtie_bloc_key = elem[1][2][1] + elem[1][2][0]  #=chrom+strand
     bowbloc = dict_bowtie_chromo_strand[bowtie_bloc_key]
-
     #
-    posgen = int(elem[1][2][2])
-    varfrq = self.variants_frq (bowbloc, posgen)
+    lenmirna = len(elem[0])
+    varfrq = self.__variants_frq (bowbloc, x, y, lenmirna)
     #
-
-    totalfrq = self.calculateTotalfrq (bowbloc, x, y)
+    totalfrq = self.__calculateTotalfrq (bowbloc, x, y) 
     result = str(totalfrq) + ',' + str(varfrq)
     elem[1].append(result)
     return elem
+
+  def mir_mirstar_duplex (self, elem, dict_bowtie_chromo_strand):
+    x, y = self.__profile_range (elem) #= exclusive
+    bowtie_bloc_key = elem[1][2][1] + elem[1][2][0]  #=chrom+strand
+    bowbloc = dict_bowtie_chromo_strand[bowtie_bloc_key]
+    lenmirna = len(elem[0])
+    #
+    a, b = posmir, posstar = x+1, y-(lenmirna-1)+1 #= inclusive
+    freq_mir  = self.__calculateTotalfrq (bowbloc, a-1, a+1)
+    freq_star = self.__calculateTotalfrq (bowbloc, b-1, b+1)
+    #
+    if freq_mir > 0 and freq_star > 0: return True
+    return False
 
 class prog_miRanda ():
   def __init__ (self, Max_Score_cutoff, Max_Energy_cutoff, target_file, rep_tmp, miranda_exe, Gap_Penalty, nbTargets):
@@ -422,7 +443,7 @@ class prog_miRanda ():
     $miranda ../tmp/tmp_mirna_seq.txt ../Arabidopsis/TAIR/Genome/TAIR10_blastsets/TAIR10_cdna_20101214_updated_1cdna.fasta
     $miranda ../tmp/GCTCACTGCTCTTTCTGTCAGA_tmpseq_forMiranda.txt TAIR10_cdna_20101214_updated_39cdna.fasta
 
-    ## NOTE before disable miranda (170714): need to modify the code to use options such as -sc, -en, -go, -ge, -quiet
+    ## NOTE (170714): see to modify the code to use options such as -sc, -en, -go, -ge, -quiet
     '''
     #= names are like this atg1234.1, atg1234.2, so even collected 2 targets, in fact there is only 1. 
     #= This kind of duplicate has been resolved.
@@ -531,7 +552,6 @@ class prog_knownNonMiRNA ():
     chr = bowtie[1]
     posBegin = int(bowtie[2])
     posEnd = posBegin + len(seq) - 1
-
     for coor in self.non_miRNA.values():
       nonmir_chromo = coor[1]
       if not chr == nonmir_chromo: continue
@@ -549,16 +569,13 @@ class prog_varna ():
     self.appId = appId
     self.rep_output = rep_output
 
-
   def __editing___run_VARNA_prog (self, preSEQ, preFOLD, miRNApos, title, filename):
-    ''' this does not work yet ''' 
+    ''' this does not work yet, to use subprocess instead of shell ''' 
     FNULL = open(os.devnull, 'w')
     cmd = ['java', '-cp', '../lib/VARNAv3-93.jar', 'fr.orsay.lri.varna.applications.VARNAcmd', '-sequenceDBN', '"' + preSEQ + '"', '-structureDBN', '"' + preFOLD + '"', '-highlightRegion', '"' + miRNApos + ':fill=#ff0000"', '-title', '"' + title + '"', '-o', filename + '.jpg']
     sproc = sbp.Popen(cmd, stdout=sbp.PIPE, stderr=FNULL, shell=False, env=self.env)
     out = sproc.communicate() #= this line is essential!
     FNULL.close()
-
-
 
   def run_VARNA_prog (self, preSEQ, preFOLD, miRNApos, title, filename):
     #-highlightRegion "48-63:fill=#bcffdd;81-102:fill=#bcffdd"

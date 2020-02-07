@@ -14,10 +14,6 @@ Le programme implemente le pipeline d'analyse des sRAN et prediction des miRNAs.
   - 4 Repliement du precurseur
   - 5 prediction/validation du miRNA
   - 6 validaiton/filtrage avec l'expression
-
-#= programming note 181028:
-#= repartition(num) is better than partitionBy(num) because the latter we might consider segregating chromosomes. But the number of chrs are different in each species. So it is not easyo to say a number that suits everyone.
-
 '''
 
 from __future__ import print_function
@@ -32,10 +28,6 @@ import utilsMir as utm
 import mirLibRules as mru
 import arg
 
-#= 1: display intermediate rdd.count(), this makes the time longer
-#= 0: not reporting rdd.count() makes the time shorter
-#reporting = 1
-
 if __name__ == '__main__' :
 
   print('\nInitiating and verifying parameters ...')
@@ -44,28 +36,17 @@ if __name__ == '__main__' :
   for k, v in sorted(paramDict.items()): print(k, ': ', v)
 
   #= spark configuration
-  ###appMaster = paramDict['sc_master']                #"local[*]" 
   appName = paramDict['sc_appname']                 #"mirLibSpark"
   mstrMemory = paramDict['sc_mstrmemory']           #"4g"
-  ###execMemory = paramDict['sc_execmemory']           #"4g"
-  #execCores = paramDict['sc_execcores']             #2
   partition = int(paramDict['sc_partition'])
   heartbeat = int(paramDict['sc_heartbeat'])        #10
 
   #= Spark context
   sc = ut.pyspark_configuration(appName, mstrMemory, heartbeat)
 
-
-
   #= Spark application ID
   appId = paramDict['jobid']
   if appId == '--': appId = str(sc.applicationId)
-  #print('spark.executor.memory: ', sc._conf.get('spark.executor.memory'))
-  #print('spark.driver.memory: ', sc._conf.get('spark.driver.memory'))
-  #print('spark.master: ', sc._conf.get('spark.master'))
-  #print('spark.driver.memoryOverhead: ', sc._conf.get('spark.driver.memoryOverhead')) = none
-  #print('spark.executor.memoryOverhead: ', sc._conf.get('spark.executor.memoryOverhead')) = none
-  #print('spark.cores.max: ', sc._conf.get('spark.cores.max'))
 
   #= broadcast paramDict
   broadcastVar_paramDict = sc.broadcast(paramDict)
@@ -73,18 +54,14 @@ if __name__ == '__main__' :
 
   #= Parameters and cutoffs =========================
   reporting = int(paramDict['reporting'])
+  printing_removed = int(paramDict['printing_removed'])
   #= paths
   input_type = paramDict['input_type']
   adapter = ut.tr_U_T (paramDict['adapter'])
   project_path = paramDict['project_path']
   rep_input = paramDict['input_path']
   rep_output = paramDict['output_path'] + '/' + appId + '/'
-  #rep_tmp = '../tmp' + appId + '/' #= do not write files in worker node, often mirdup has problem, OUT-OF-MEMORY
   rep_tmp = project_path + '/tmp' + '/' + appId + '/'
-
-  #= print appId to a file
-  #outfile = project_path + '/appId.txt'
-  #with open (outfile, 'w') as fh: print(appId, file=fh) 
 
   #= genome
   genome_path = paramDict['genome_path'] 
@@ -97,7 +74,6 @@ if __name__ == '__main__' :
   miRNA_len_upperlimit = int(paramDict['miRNA_len_upperlimit']) + 1  #				keep < 25, so keep 24, 23, 22, ...
   miRNA_len_lowerlimit = int(paramDict['miRNA_len_lowerlimit']) - 1  #				keep > 20, so keep 21, 22, 23, ...
   premirna_max_len = int(paramDict['premirna_max_len']) + 1          # 				keep < 301, so keep 300, 299, 298, ...
-
 
   #= bowtie
   b_index_path = paramDict['b_index_path']
@@ -126,8 +102,16 @@ if __name__ == '__main__' :
   activateMirdup = paramDict['activateMirdup']
   mirdup_model = project_path + '/lib/miRdup_1.4/model/' + paramDict['mirdup_model']
   mirdup_jar = project_path + '/lib/miRdup_1.4/miRdup.jar'
-  #mirdup_limit =  float(paramDict['mirdup_limit'])
   mirdup_limit =  0.98 # not tunable
+
+  #= check both miR and miR* exist (duplex rule)
+  check_duplex =  paramDict['check_duplex']
+  #= cutoff for expression profile considering meyers variants
+  varaints_profile_cutoff =  float(paramDict['variants_profile_cutoff'])
+  #= replicate validation for multi-libraries
+  replicate_validation =  int(paramDict['replicate_validation'])
+  repthreshold2122 =  int(paramDict['repthreshold2122'])
+  repthreshold2324 =  int(paramDict['repthreshold2324'])
 
   #= miRanda parameter
   target_file = paramDict['target_file']
@@ -172,7 +156,7 @@ if __name__ == '__main__' :
   rnafold_obj = mru.prog_RNAfold(temperature)
   mircheck_obj = mru.prog_mirCheck(mcheck_param, project_path)
   mirdup_obj = mru.prog_miRdup (rep_tmp, mirdup_model, mirdup_jar, path_RNAfold)
-  profile_obj = mru.prog_dominant_profile()
+  profile_obj = mru.prog_dominant_profile(pre_flank)
   miranda_obj = mru.prog_miRanda(Max_Score_cutoff, Max_Energy_cutoff, target_file, rep_tmp, miranda_binary, Gap_Penalty, nbTargets)
 
 
@@ -308,7 +292,7 @@ if __name__ == '__main__' :
     #= Filtering, keep miRNA length = 21, 22, 23, 24
     ## in : ('seq', [freq, nbLoc, [['strd','chr',posChr],..]])
     ## out: ('seq', [freq, nbLoc, [['strd','chr',posChr],..]])
-    mr_meyers2018len_rdd = bowFrq_rdd.filter(lambda e: len(e[0]) < miRNA_len_upperlimit and len(e[0]) > miRNA_len_lowerlimit)
+    mr_meyers2018len_rdd = bowFrq_rdd.filter(lambda e: miRNA_len_lowerlimit < len(e[0]) < miRNA_len_upperlimit)
     if reporting == 1: print(datetime.datetime.now(), 'NB mr_meyers2018len_rdd: ', mr_meyers2018len_rdd.count(), '\tremoved sequences if length >= ', miRNA_len_upperlimit, 'and <=', miRNA_len_lowerlimit)
 
     #= Filtering miRNA low frequency
@@ -367,7 +351,8 @@ if __name__ == '__main__' :
                                    .filter(lambda e: any(e[1][3]))\
                                    .map(lambda e: (e[0] + e[1][2][0] + e[1][2][1] + str(e[1][2][2]) + e[1][3][4] + e[1][3][5], e)  )\
                                    .reduceByKey(lambda a, b: a)\
-                                   .map(lambda e: e[1])
+                                   .map(lambda e: e[1])\
+                                   .persist()
     if reporting == 1: print(datetime.datetime.now(), 'NB pri_mircheck_rdd: ', pri_mircheck_rdd.groupByKey().count(), '\t\tremoved sequences failed mircheck')
     print(datetime.datetime.now(), 'pri_mircheck_rdd') #= BOTTLE NECK
 
@@ -432,8 +417,9 @@ if __name__ == '__main__' :
       if reporting == 1: print(datetime.datetime.now(), 'NB pre_mirdup_rdd distinct: ', pre_mirdup_rdd.groupByKey().count(), '\t\tremoved sequences not satisfying miRdup model')
       print(datetime.datetime.now(), 'pre_mirdup_rdd distinct') #= BOTTLE NECK
     
-    
-    #= Filtering by expression profile (< 20%)
+   
+    #= Filtering by mir_mir* duplex if exists, and 
+    #= Filtering by expression profile (< 80%), considering variants
     ## in : ('seq', [freq, nbLoc, ['strd','chr',posChr], ['priSeq',posMirPri,'priFold', 'mkPred','mkStart','mkStop'], ['preSeq',posMirPre,'preFold','mpPred','mpScore']])
     ## out: ('seq', [freq, nbLoc, ['strd','chr',posChr], ['priSeq',posMirPri,'priFold', 'mkPred','mkStart','mkStop'], ['preSeq',posMirPre,'preFold','mpPred','mpScore'], totalfrq])
 
@@ -454,18 +440,21 @@ if __name__ == '__main__' :
       #= REPARTITION x2     =#
       #======================#
       y_rdd = x_rdd.filter(lambda e: e[0] == chromo_strand)
-      broadcastVar_dict_bowtie_chromo_strand = sc.broadcast(profile_obj.get_bowtie_strandchromo_dict(y_rdd.collect()))
+      broadcastVar_dict_bowtie_chromo_strand = sc.broadcast(profile_obj.get_bowtie_chromostrand_dict(y_rdd.collect()))
       profile_value_rdd = profile_keyvalue_rdd.filter(lambda e: e[0] == chromo_strand)\
                                               .repartition(partition)\
                                               .map(lambda e: profile_obj.computeProfileFrq(e[1], broadcastVar_dict_bowtie_chromo_strand.value))\
-                                              .filter(lambda e: int(e[1][5].split(',')[1]) / (float(e[1][5].split(',')[0]) + 0.1) > 0.2)
+                                              .filter(lambda e: int(e[1][5].split(',')[1]) / (float(e[1][5].split(',')[0]) + 0.1) > varaints_profile_cutoff)
+      if check_duplex == 'True':
+        check_duplex_rdd = profile_value_rdd.filter(lambda e: profile_obj.mir_mirstar_duplex(e[1], broadcastVar_dict_bowtie_chromo_strand.value))
+      else: check_duplex_rdd = profile_value_rdd
       mergeProfileChromo_rdd = mergeProfileChromo_rdd.union(profile_value_rdd)\
                                                      .repartition(partition)\
                                                      .persist()
       #================================================================================================================
       #================================================================================================================
 
-    slim_rdd = mergeProfileChromo_rdd.map(mru.slimrule)
+    slim_rdd = mergeProfileChromo_rdd.map(mru.slimrule).persist()
 
 
     if reporting == 1: print(datetime.datetime.now(), 'NB slim_rdd NON distinct: ', slim_rdd.count(), '\t\tremoved sequences not dominating the expression within precursor range (expressions of their variants are considered)')
@@ -475,6 +464,109 @@ if __name__ == '__main__' :
     #= collecting final miRNA predictions
     libresults = slim_rdd.collect()
     print(datetime.datetime.now(), 'libresults=slim_rdd.collect()')#= BOTTLE NECK
+
+
+    if printing_removed == 1:
+      #print(datetime.datetime.now(), 'NB collapse_rdd: ', collapse_rdd.count(), '\t\tinput instances')
+      set1 = collapse_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set1\t\tinput instances', 'remaining NB = ', len(set1))
+
+      #print(datetime.datetime.now(), 'NB sr_low_rdd: ', sr_low_rdd.count(), '\t\tremoved low expression if counts <=', limit_srna_freq)
+      set2 = sr_low_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set2', 'remaining NB = ', len(set2))
+      outfile = rep_output  +  appId + '_excludedItems_set2_' + inBasename + '.txt'
+      data = list(set(set1)-set(set2))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB sr_short_rdd: ', sr_short_rdd.count(), '\t\tremoved short sequences if length <=', limit_len)
+      set3 = sr_short_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set3\t\tremoved low expression if counts <=', limit_srna_freq, 'remaining NB = ', len(set3))
+      outfile = rep_output  +  appId + '_excludedItems_set3_' + inBasename + '.txt'
+      data = list(set(set2)-set(set3))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB dmask_rdd: ', dmask_rdd.count(), '\t\t\tremoved low complexity sequences by dustmasker')
+      set4 = dmask_rdd.collect()
+      print(datetime.datetime.now(), 'set4', 'remaining NB = ', len(set4))
+      outfile = rep_output  +  appId + '_excludedItems_set4_' + inBasename + '.txt'
+      data = list(set(set3)-set(set4))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB mergebowtie_rdd: ', mergebowtie_rdd.count(), '\t\tremoved sequences failed genomic alignment')
+      set5 = mergebowtie_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set5\t\t\tremoved low complexity sequences by dustmasker', 'remaining NB = ', len(set5))
+      outfile = rep_output  +  appId + '_excludedItems_set5_' + inBasename + '.txt'
+      data = list(set(set4)-set(set5))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB mr_meyers2018len_rdd: ', mr_meyers2018len_rdd.count(), '\tremoved sequences if length >= ', miRNA_len_upperlimit, 'and <=', miRNA_len_lowerlimit)
+      set6 = mr_meyers2018len_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set6\tremoved sequences if length >= ', miRNA_len_upperlimit, 'and <=', miRNA_len_lowerlimit, 'remaining NB = ', len(set6))
+      outfile = rep_output  +  appId + '_excludedItems_set6_' + inBasename + '.txt'
+      data = list(set(set5)-set(set6))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB mr_low_rdd: ', mr_low_rdd.count(), '\t\t\tremoved sequences with counts <= ', limit_mrna_freq)
+      set7 = mr_low_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set7', 'remaining NB = ', len(set7))
+      outfile = rep_output  +  appId + '_excludedItems_set7_' + inBasename + '.txt'
+      data = list(set(set6)-set(set7))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB nbLoc_rdd: ', nbLoc_rdd.count(), '\t\t\tremoved sequences with numbers of genomic alignment >= ', limit_nbLoc)
+      set8 = nbLoc_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set8\t\t\tremoved sequences with counts <= ', limit_mrna_freq, 'remaining NB = ', len(set(set8)))
+      outfile = rep_output  +  appId + '_excludedItems_set8_' + inBasename + '.txt'
+      data = list(set(set7)-set(set8))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'excluKnownNon_rdd distinct: ', excluKnownNon_rdd.groupByKey().count(), '\tremoved sequences known for not being a miRNA (CDS|rRNA|snoRNA|snRNA|tRNA)')
+      set9 = excluKnownNon_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set9\tremoved sequences known for not being a miRNA (CDS|rRNA|snoRNA|snRNA|tRNA)', 'remaining NB = ', len(set(set9)))
+      outfile = rep_output  +  appId + '_excludedItems_set9_' + inBasename + '.txt'
+      data = list(set(set8)-set(set9))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB pri_mircheck_rdd: ', pri_mircheck_rdd.groupByKey().count(), '\t\tremoved sequences failed mircheck')
+      set10 = pri_mircheck_rdd.map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set10\t\tremoved sequences failed mircheck', 'remaining NB = ', len(set(set10)))
+      outfile = rep_output  +  appId + '_excludedItems_set10_' + inBasename + '.txt'
+      data = list(set(set9)-set(set10))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB len300_rdd: ', len300_rdd.groupByKey().count(), '\t\tremoved sequences with precursor length >= ', premirna_max_len)
+      set11 = len300_rdd.groupByKey().map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set11\t\tremoved sequences with precursor length >= ', premirna_max_len, 'remaining NB = ', len(set11))
+      outfile = rep_output  +  appId + '_excludedItems_set11_' + inBasename + '.txt'
+      data = list(set(set10)-set(set11))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB one_loop_rdd distinct : ', one_loop_rdd.groupByKey().count(), '\t\tremoved sequences with precursor second loop not satisfying meyers2018')
+      set12 = one_loop_rdd.groupByKey().map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set12\t\tremoved sequences with precursor second loop not satisfying meyers2018, remaining NB = ', len(set12))
+      outfile = rep_output  +  appId + '_excludedItems_set12_' + inBasename + '.txt'
+      data = list(set(set11)-set(set12))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
+      #print(datetime.datetime.now(), 'NB slim_rdd NON distinct: ', slim_rdd.count(), '\t\tremoved sequences not dominating the expression within precursor range (expressions of their variants are considered)')
+      set13 = slim_rdd.groupByKey().map(lambda e: e[0]).collect()
+      print(datetime.datetime.now(), 'set13\t\tremoved sequences whose expressions do not dominate within precursor range (expressions of their variants are considered), remaining NB = ', len(set13))
+      outfile = rep_output  +  appId + '_excludedItems_set13_' + inBasename + '.txt'
+      data = list(set(set12)-set(set13))
+      with open (outfile, 'w') as fh: 
+        for i in data: print(i, file=fh)
+
 
     endLib = time.time() 
     timeDict[inBasename] = endLib - startLib
@@ -489,7 +581,7 @@ if __name__ == '__main__' :
   outTime = rep_output + appId + '_time.txt'
   ut.writeTimeLibToFile (timeDict, outTime, appId, paramDict)
 
-  
+  #'''
   #===============================================================================================================
   #=
   #= Post processing after miRNA prediction
@@ -498,7 +590,7 @@ if __name__ == '__main__' :
   #= make summary table of all libraries in one submission with expressions in the field
   keyword = appId + '_miRNAprediction_'
   infiles = [f for f in listdir(rep_output) if (os.path.isfile(os.path.join(rep_output, f)) and f.startswith(keyword))]
-  Precursor, distResultSmallRNA = utm.writeSummaryExpressionToFile (infiles, rep_output, appId)
+  Precursor, distResultSmallRNA = utm.writeSummaryExpressionToFile (infiles, rep_output, appId, replicate_validation, repthreshold2122, repthreshold2324)
 
   ### in : ( 'seq' )
   ### out: ( 'seq', zipindex)
@@ -520,8 +612,8 @@ if __name__ == '__main__' :
                               .collect()
   utm.write_index (PrecursorVis, rep_output, appId)
   print('PrecursorVis done')
-  
-  
+ 
+
   #= miranda target prediction
   ## in : ('miRNAseq', zipindex)
   ## out: ('miRNAseq', [[target1 and its scores], [target2 and its scores]])
@@ -531,16 +623,7 @@ if __name__ == '__main__' :
                                             .collect()
   utm.writeTargetsToFile (mirna_and_targets, rep_output, appId)
   print('Target prediction done')
-  
-
-  ## I dont know what is the use of this, maybe there is no use...
-  ## in: ('miRNAseq', [[targetgene1 and its scores], [targetgene2 and its scores]])
-  ## out:( 'targetgene' )
-  #master_distinctTG = miranda_rdd.map(lambda e: [  i[0].split('.')[0] for i in e[1]  ])\
-  #                               .reduce(lambda a, b: a+b)
-  #master_distinctTG = sorted(list(set(master_distinctTG)))
-  #print( master_distinctTG )
-
+  #'''
 
   #= clear caches (memory leak)
   broadcastVar_paramDict.unpersist()
@@ -550,9 +633,12 @@ if __name__ == '__main__' :
   mergeChromosomesResults_rdd.unpersist()
   broadcastVar_d_ncRNA_CDS.unpersist()
   bowFrq_rdd.unpersist()
+  pri_mircheck_rdd.unpersist()
   mergeProfileChromo_rdd.unpersist()
   broadcastVar_dict_bowtie_chromo_strand.unpersist()
   profile_keyvalue_rdd.unpersist()
+  slim_rdd.unpersist()
+
 
 
   #= end of spark context, stop to allow running multiple SparkContexts
@@ -560,7 +646,6 @@ if __name__ == '__main__' :
   print(datetime.datetime.now(), 'sc stop time')
   #===============================================================================================================
   #===============================================================================================================
-  ##appId = 'local-1538502520294'
   #= diff analysis 
   if perform_differential_analysis == 'yes':
     diff_outs = utm.diff_output(diffguide_file, rep_output, appId)
@@ -581,9 +666,3 @@ if __name__ == '__main__' :
   print(time_b, 'finish time')
   print('total running time: ', time_b - time_a)
   print('====================== End of ' + appId + ' =============\n')
-
-
-
-
-
-
